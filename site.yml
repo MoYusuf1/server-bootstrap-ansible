@@ -1,0 +1,22 @@
+---
+- name: Bootstrap a fresh Ubuntu 24.04 server
+  hosts: all
+  become: true
+
+  pre_tasks:
+    - name: Stop if the target is not Ubuntu 24.04
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['distribution'] == 'Ubuntu'
+          - ansible_facts['distribution_version'] == '24.04'
+        fail_msg: "This playbook is tested on Ubuntu 24.04 only. Found {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}."
+        quiet: true
+
+  # Order matters: the admin user and key must exist before SSH stops taking passwords.
+  roles:
+    - common
+    - users
+    - ssh_hardening
+    - firewall
+    - fail2ban
+    - docker

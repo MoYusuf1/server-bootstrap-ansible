@@ -1,0 +1,32 @@
+---
+- name: Check the user name and public key before changing anything
+  ansible.builtin.assert:
+    that:
+      - users_name is match('^[a-z_][a-z0-9_-]{0,31}$')
+      - users_ssh_public_key_file is file
+      - users_ssh_public_key_file is search('\.pub$')
+    fail_msg: "Set users_name to a plain Linux user name, and users_ssh_public_key_file to a .pub file that exists on this machine."
+    quiet: true
+
+- name: Create the admin user
+  ansible.builtin.user:
+    name: "{{ users_name }}"
+    shell: /bin/bash
+    create_home: true
+
+# No password is set, so sudo must not ask for one. The SSH key is the only way in.
+- name: Let the admin user run sudo without a password
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/{{ users_name }}"
+    content: "{{ users_name }} ALL=(ALL) NOPASSWD:ALL\n"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s
+
+- name: Add your public key to the admin user
+  ansible.posix.authorized_key:
+    user: "{{ users_name }}"
+    key: "{{ lookup('ansible.builtin.file', users_ssh_public_key_file) }}"
+  # In check mode the user is not created yet, so this task cannot find it.
+  ignore_errors: "{{ ansible_check_mode }}"

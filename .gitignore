@@ -1,0 +1,4 @@
+# Your real inventory stays on your machine. Copy it from hosts.example.yml.
+inventory/hosts.yml
+*.retry
+.venv/

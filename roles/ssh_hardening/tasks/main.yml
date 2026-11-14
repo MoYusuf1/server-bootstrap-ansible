@@ -1,0 +1,26 @@
+---
+# Lockout guard: prove a key login works before passwords are turned off.
+- name: Prove the admin user can log in with a key
+  ansible.builtin.command: >-
+    ssh -o BatchMode=yes -o PasswordAuthentication=no
+    -p {{ ansible_port | default(22) }}
+    {{ users_name }}@{{ ansible_host | default(inventory_hostname) }} true
+  delegate_to: localhost
+  become: false
+  changed_when: false
+
+# sshd keeps the FIRST value it reads. 00- sorts before Ubuntu's own 50-cloud-init.conf.
+- name: Allow key logins only, and no root login
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/00-hardening.conf
+    content: |
+      # Managed by Ansible (server-bootstrap-ansible). Local edits are overwritten.
+      PermitRootLogin no
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PubkeyAuthentication yes
+    owner: root
+    group: root
+    mode: "0644"
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Reload ssh

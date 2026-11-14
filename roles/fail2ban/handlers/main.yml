@@ -1,0 +1,7 @@
+---
+- name: Restart fail2ban
+  ansible.builtin.systemd_service:
+    name: fail2ban
+    state: restarted
+  # In check mode fail2ban is not installed yet, so there is nothing to restart.
+  ignore_errors: "{{ ansible_check_mode }}"

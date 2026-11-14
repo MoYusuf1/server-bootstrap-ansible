@@ -1,0 +1,10 @@
+# Managed by Ansible (server-bootstrap-ansible). Local edits are overwritten.
+[DEFAULT]
+bantime = {{ fail2ban_bantime }}
+findtime = {{ fail2ban_findtime }}
+maxretry = {{ fail2ban_maxretry }}
+
+[sshd]
+enabled = true
+# Read failed logins from the systemd journal.
+backend = systemd

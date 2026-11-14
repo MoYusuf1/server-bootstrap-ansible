@@ -1,0 +1,58 @@
+---
+# Checks the real result on the server, not what Ansible reported.
+- name: Check the real state of the server
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Read the settings sshd is really using
+      ansible.builtin.command: sshd -T
+      register: verify_sshd
+      changed_when: false
+
+    - name: Check SSH takes keys only and refuses root
+      ansible.builtin.assert:
+        that:
+          - "'permitrootlogin no' in verify_sshd.stdout_lines"
+          - "'passwordauthentication no' in verify_sshd.stdout_lines"
+          - "'kbdinteractiveauthentication no' in verify_sshd.stdout_lines"
+          - "'pubkeyauthentication yes' in verify_sshd.stdout_lines"
+
+    - name: Ask the server from this machine which login methods it offers
+      ansible.builtin.command: >-
+        ssh -o BatchMode=yes -o PreferredAuthentications=none
+        -p {{ ansible_port | default(22) }}
+        {{ users_name }}@{{ ansible_host | default(inventory_hostname) }}
+      delegate_to: localhost
+      become: false
+      register: verify_methods
+      changed_when: false
+      failed_when: "'Permission denied (publickey)' not in verify_methods.stderr"
+
+    - name: Read the firewall status
+      ansible.builtin.command: ufw status verbose
+      register: verify_ufw
+      changed_when: false
+
+    - name: Check the firewall is on and denies incoming traffic
+      ansible.builtin.assert:
+        that:
+          - "'Status: active' in verify_ufw.stdout"
+          - "'deny (incoming)' in verify_ufw.stdout"
+
+    - name: Check the fail2ban SSH jail is running
+      ansible.builtin.command: fail2ban-client status sshd
+      changed_when: false
+
+    - name: Run a container as the admin user, without sudo
+      ansible.builtin.command: docker run --rm hello-world
+      become: true
+      become_user: "{{ users_name }}"
+      register: verify_docker
+      changed_when: false
+      failed_when: "'Hello from Docker!' not in verify_docker.stdout"
+
+    - name: Check the Compose plugin works
+      ansible.builtin.command: docker compose version
+      changed_when: false

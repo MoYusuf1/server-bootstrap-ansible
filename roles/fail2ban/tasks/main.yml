@@ -1,0 +1,25 @@
+---
+- name: Install fail2ban
+  ansible.builtin.apt:
+    name:
+      - fail2ban
+      - python3-systemd
+    state: present
+
+- name: Configure the SSH jail
+  ansible.builtin.template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart fail2ban
+  # In check mode the package is not installed yet, so /etc/fail2ban does not exist.
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Start fail2ban now and at boot
+  ansible.builtin.systemd_service:
+    name: fail2ban
+    state: started
+    enabled: true
+  ignore_errors: "{{ ansible_check_mode }}"

@@ -1,0 +1,3 @@
+# Versions CI uses. Matches what the playbook was checked with.
+ansible==14.6.0
+ansible-lint==26.11.0

@@ -1,0 +1,21 @@
+---
+# Runs in check mode too: a fresh server's package list is empty, so a dry run would not find fail2ban.
+# Refreshing the list changes no installed software. cache_valid_time keeps a second run quiet.
+- name: Update the package list
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  check_mode: false
+
+- name: Install safe upgrades
+  ansible.builtin.apt:
+    upgrade: safe
+
+- name: Install basic packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+
+- name: Set the timezone
+  community.general.timezone:
+    name: "{{ common_timezone }}"

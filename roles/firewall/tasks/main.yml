@@ -1,0 +1,19 @@
+---
+- name: Install UFW
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+
+# Add the allow rules first. Turning on deny before SSH is allowed would cut this session.
+- name: Allow the listed TCP ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: "{{ firewall_allowed_tcp_ports }}"
+
+- name: Deny other incoming traffic and turn the firewall on
+  community.general.ufw:
+    state: enabled
+    direction: incoming
+    policy: deny

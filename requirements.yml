@@ -1,0 +1,5 @@
+---
+# The full "ansible" package already has these. Install them if you only have ansible-core.
+collections:
+  - name: community.general
+  - name: ansible.posix

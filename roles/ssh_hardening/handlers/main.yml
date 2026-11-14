@@ -1,0 +1,6 @@
+---
+# Reload, not restart: open sessions (including this Ansible run) stay connected.
+- name: Reload ssh
+  ansible.builtin.systemd_service:
+    name: ssh
+    state: reloaded

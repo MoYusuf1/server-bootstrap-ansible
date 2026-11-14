@@ -1,0 +1,8 @@
+---
+# Copy this file to inventory/hosts.yml and change the two values.
+# hosts.yml is in .gitignore, so your VM's details never reach GitHub.
+all:
+  hosts:
+    bootstrap-vm:
+      ansible_host: 192.168.122.50 # your VM's IP address
+      ansible_user: mo # the user you made when you installed Ubuntu
